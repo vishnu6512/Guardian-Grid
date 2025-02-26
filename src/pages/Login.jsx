@@ -146,19 +146,7 @@ const Login = () => {
                     </div>
                   </Form.Group>
 
-                  <Form.Group className="mb-4">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <Form.Check
-                        type="checkbox"
-                        label="Remember me"
-                        id="remember-me"
-                      />
-                      <Link to="/forgot-password" className="text-primary text-decoration-none">
-                        Forgot password?
-                      </Link>
-                    </div>
-                  </Form.Group>
-
+                
                   <Button
                     variant="primary"
                     type="submit"
