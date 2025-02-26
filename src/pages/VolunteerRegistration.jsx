@@ -14,6 +14,8 @@ const VolunteerRegistration = () => {
     password: '',
     phone: '',
     location: '',
+    lat: '',
+    lng: '',
     role: 'volunteer'
   });
   const [error, setError] = useState(null);
@@ -128,6 +130,8 @@ const VolunteerRegistration = () => {
                 password: '',
                 phone: '',
                 location: '',
+                lat: '',
+                lng: '',
             });
         } else {
             console.log("Unexpected API structure:", result);

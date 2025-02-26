@@ -1,16 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar, Container, Nav, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 const Header = () => {
+  const navigate = useNavigate(); 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    setIsLoggedIn(!!userId);
+  }, []);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("userId");
+    setIsLoggedIn(false);
+    navigate("/login"); 
+  };
+
   return (
     <>
-      {/* Navbar */}
       <Navbar bg="light" expand="lg" className="shadow-sm py-3">
         <Container>
           <Navbar.Brand 
             href="/" 
             style={{ 
-              color: "#1C3D73",  // Deep Blue brand color
+              color: "#1C3D73",  
               fontWeight: "bold", 
               fontSize: "1.75rem" 
             }}
@@ -20,25 +34,40 @@ const Header = () => {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
             <Nav>
-              <Nav.Link as={Link} to="/login">
+              {isLoggedIn ? (
                 <Button 
-                  variant="outline-primary" 
+                  variant="outline-danger" 
                   style={{ 
-                    borderColor: "#1C3D73",
-                    color: "#1C3D73",
+                    borderColor: "#dc3545",
+                    color: "#dc3545",
                     fontWeight: "600",
                     padding: "6px 16px"
                   }}
+                  onClick={handleLogout}
                 >
-                  Login
+                  Logout
                 </Button>
-              </Nav.Link>
+              ) : (
+                <Nav.Link as={Link} to="/login">
+                  <Button 
+                    variant="outline-primary" 
+                    style={{ 
+                      borderColor: "#1C3D73",
+                      color: "#1C3D73",
+                      fontWeight: "600",
+                      padding: "6px 16px"
+                    }}
+                  >
+                    Login
+                  </Button>
+                </Nav.Link>
+              )}
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
     </>
   );
-}
+};
 
 export default Header;

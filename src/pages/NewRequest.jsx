@@ -29,7 +29,9 @@ const NewRequest = () => {
     email: '',
     phone: '',
     location: '',
-    description: ''
+    description: '',
+    lat: '',
+    lng: ''
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -54,7 +56,6 @@ const NewRequest = () => {
     script.defer = true;
     document.head.appendChild(script);
 
-
     window.initializeGoogleMaps = () => {
       initializeMapAndAutocomplete();
     };
@@ -73,9 +74,9 @@ const NewRequest = () => {
       zoom: 8,
       styles: [
         {
-          featureType: "poi",
-          elementType: "labels",
-          stylers: [{ visibility: "off" }],
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'off' }],
         },
       ],
     });
@@ -103,7 +104,7 @@ const NewRequest = () => {
       mapInstance.setZoom(15);
       markerInstance.setPosition(location);
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         location: place.formatted_address,
         lat: location.lat,
@@ -117,12 +118,14 @@ const NewRequest = () => {
 
       geocoder.geocode({ location: position }, (results, status) => {
         if (status === 'OK' && results[0]) {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             location: results[0].formatted_address,
             lat: position.lat(),
             lng: position.lng(),
           }));
+        } else {
+          console.error('Error geocoding coordinates:', status);
         }
       });
     });
@@ -133,9 +136,9 @@ const NewRequest = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -144,24 +147,29 @@ const NewRequest = () => {
     console.log('Form submitted:', formData);
     try {
       const result = await registerAfiAPI(formData);
-      console.log("API Response:", result); // Debugging the API response
-      
-      if (result.status == 201) {
-          alert(`${result.data.name}, Help is on the way! Someone from the volunteer team will contact you soon.`);
-          navigate("/faq");
-          setFormData({
-              name: '',
-              email: '',
-              phone: '',
-              location: '',
-              description: '',
-          });
+      console.log('API Response:', result);
+
+      if (result.status === 201) {
+        alert(
+          `${result.data.name}, Help is on the way! A volunteer will contact you soon.`
+        );
+        navigate('/faq');
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          location: '',
+          lat: '',
+          lng: '',
+          description: '',
+        });
       } else {
-          console.log("Unexpected API structure:", result);
-          alert("Unexpected error");
+        console.log('Unexpected API structure:', result);
+        alert('Unexpected error');
       }
     } catch (err) {
-      console.log("Error in API call:", err);
+      console.log('Error in API call:', err);
+      alert('Connection failed. Please try again later.');
     }
   };
 
@@ -175,14 +183,16 @@ const NewRequest = () => {
           background: styles.headerGradient,
           color: 'white',
           borderRadius: '0 0 20px 20px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         }}
       >
         <Container fluid>
           <div className="d-flex justify-content-center align-items-center">
             <div>
               <h2 className="text-white mb-1 fw-bold">Request Assistance</h2>
-              <p className="text-white mb-0 opacity-75">Please provide details about your emergency situation</p>
+              <p className="text-white mb-0 opacity-75">
+                Please provide details about your emergency situation
+              </p>
             </div>
           </div>
         </Container>
@@ -196,7 +206,7 @@ const NewRequest = () => {
               style={{
                 borderRadius: styles.borderRadius,
                 boxShadow: styles.cardShadow,
-                transition: styles.transition
+                transition: styles.transition,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-5px)';
@@ -214,7 +224,7 @@ const NewRequest = () => {
                     style={{
                       borderRadius: styles.borderRadius,
                       border: 'none',
-                      boxShadow: styles.cardShadow
+                      boxShadow: styles.cardShadow,
                     }}
                   >
                     {error}
@@ -226,7 +236,7 @@ const NewRequest = () => {
                     style={{
                       borderRadius: styles.borderRadius,
                       border: 'none',
-                      boxShadow: styles.cardShadow
+                      boxShadow: styles.cardShadow,
                     }}
                   >
                     {success}
@@ -234,14 +244,17 @@ const NewRequest = () => {
                 )}
 
                 <Form onSubmit={handleSubmit}>
-                  {/* Form fields with styled inputs */}
+                  {/* Full Name */}
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-4" id="name">
                         <Form.Label className="text-muted">Full Name</Form.Label>
                         <div className="input-group">
                           <span className="input-group-text bg-light border-end-0">
-                            <MapPin size={18} style={{ color: styles.primaryBlue }} />
+                            <MapPin
+                              size={18}
+                              style={{ color: styles.primaryBlue }}
+                            />
                           </span>
                           <Form.Control
                             type="text"
@@ -255,12 +268,17 @@ const NewRequest = () => {
                         </div>
                       </Form.Group>
                     </Col>
+
+                    {/* Phone Number */}
                     <Col md={6}>
                       <Form.Group className="mb-4" id="phone">
                         <Form.Label className="text-muted">Phone Number</Form.Label>
                         <div className="input-group">
                           <span className="input-group-text bg-light border-end-0">
-                            <Phone size={18} style={{ color: styles.primaryBlue }} />
+                            <Phone
+                              size={18}
+                              style={{ color: styles.primaryBlue }}
+                            />
                           </span>
                           <Form.Control
                             type="tel"
@@ -276,12 +294,15 @@ const NewRequest = () => {
                     </Col>
                   </Row>
 
-                  {/* Email Input */}
+                  {/* Email */}
                   <Form.Group className="mb-4" id="email">
                     <Form.Label className="text-muted">Email Address</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-light border-end-0">
-                        <Mail size={18} style={{ color: styles.primaryBlue }} />
+                        <Mail
+                          size={18}
+                          style={{ color: styles.primaryBlue }}
+                        />
                       </span>
                       <Form.Control
                         type="email"
@@ -295,12 +316,15 @@ const NewRequest = () => {
                     </div>
                   </Form.Group>
 
-                  {/* Location Input */}
+                  {/* Location */}
                   <Form.Group className="mb-4" id="location">
                     <Form.Label className="text-muted">Location</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-light border-end-0">
-                        <MapPin size={18} style={{ color: styles.primaryBlue }} />
+                        <MapPin
+                          size={18}
+                          style={{ color: styles.primaryBlue }}
+                        />
                       </span>
                       <Form.Control
                         id="location-input"
@@ -315,7 +339,7 @@ const NewRequest = () => {
                     </div>
                   </Form.Group>
 
-                  {/* Map */}
+                  {/* Map Container */}
                   <div className="mb-4">
                     <div
                       ref={mapRef}
@@ -323,17 +347,20 @@ const NewRequest = () => {
                         width: '100%',
                         height: '300px',
                         borderRadius: '8px',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
                       }}
                     />
                   </div>
 
                   {/* Description */}
                   <Form.Group className="mb-4" id="description">
-                    <Form.Label className="text-muted">Description of Emergency</Form.Label>
+                    <Form.Label className="text-muted">Emergency Description</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-light border-end-0">
-                        <AlertCircle size={18} style={{ color: styles.primaryBlue }} />
+                        <AlertCircle
+                          size={18}
+                          style={{ color: styles.primaryBlue }}
+                        />
                       </span>
                       <Form.Control
                         as="textarea"
@@ -341,7 +368,7 @@ const NewRequest = () => {
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
-                        placeholder="Please describe your emergency situation in detail"
+                        placeholder="Describe your emergency in as much detail as possible"
                         required
                         className="border-start-0 ps-0"
                       />
@@ -356,10 +383,13 @@ const NewRequest = () => {
                     style={{
                       backgroundColor: styles.primaryBlue,
                       borderColor: styles.primaryBlue,
-                      transition: styles.transition
+                      transition: styles.transition,
                     }}
                   >
-                    <AlertCircle size={18} style={{ color: 'white' }} />
+                    <AlertCircle
+                      size={18}
+                      style={{ color: 'white' }}
+                    />
                     Submit Request
                   </Button>
                 </Form>
