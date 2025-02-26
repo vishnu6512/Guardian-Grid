@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, ListGroup, Badge } from 'react-bootstrap';
 import { User, Bell, Clock, CheckCircle, Calendar, ClipboardCheck } from 'lucide-react';
 import Header from '../components/Header';
-import { getVolunteerStatusAPI, getAssignedAFIsAPI } from '../services/allAPI';
+import { getVolunteerStatusAPI, getAssignedAFIsAPI, updateAssignmentStatusAPI } from '../services/allAPI';
 
 // Custom CSS styles
 const styles = {
@@ -23,7 +23,8 @@ const styles = {
 
 const VolunteerDashboard = () => {
   const [status, setStatus] = useState(null);
-  const [assignments, setAssignments] = useState([]);
+  const [assignedTasks, setAssignedTasks] = useState([]);
+  const [activeTasks, setActiveTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,11 +40,16 @@ const VolunteerDashboard = () => {
 
       try {
         const statusResponse = await getVolunteerStatusAPI(userId);
-        setStatus(statusResponse.data.status);
+        setStatus(statusResponse?.data?.status);
 
-        if (statusResponse.data.status === "approved") {
-          const afiResponse = await getAssignedAFIsAPI(userId);
-          setAssignments(afiResponse.data);
+        if (statusResponse?.data?.status === "approved") {
+          // Fetch tasks with "assigned" status
+          const assignedResponse = await getAssignedAFIsAPI(userId, "assigned");
+          setAssignedTasks(assignedResponse?.data || []);
+          
+          // Fetch tasks with "In Progress" status
+          const activeResponse = await getAssignedAFIsAPI(userId, "In Progress");
+          setActiveTasks(activeResponse?.data || []);
         }
       } catch (err) {
         setError("Failed to fetch volunteer data.");
@@ -52,9 +58,29 @@ const VolunteerDashboard = () => {
         setIsLoading(false);
       }
     };
-
+    
     fetchVolunteerData();
   }, []);
+
+  const handleActivate = async (id) => {
+    try {
+      await updateAssignmentStatusAPI(id, "In Progress");
+      
+      // Update local state after successful API call
+      // Remove from assigned tasks
+      setAssignedTasks(prevTasks => prevTasks.filter(task => task._id !== id));
+      
+      // Get the task that was activated
+      const activatedTask = assignedTasks.find(task => task._id === id);
+      if (activatedTask) {
+        // Add to active tasks with updated status
+        const updatedTask = {...activatedTask, status: "In Progress"};
+        setActiveTasks(prevTasks => [...prevTasks, updatedTask]);
+      }
+    } catch (error) {
+      console.error("Failed to update assignment status:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -192,7 +218,7 @@ const VolunteerDashboard = () => {
                 </div>
                 <div>
                   <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Active Assignments</p>
-                  <h3 className="mb-0 fw-bold">{assignments.length}</h3>
+                  <h3 className="mb-0 fw-bold">{assignedTasks.length + activeTasks.length}</h3>
                 </div>
               </Card.Body>
             </Card>
@@ -253,9 +279,9 @@ const VolunteerDashboard = () => {
           </Col>
         </Row>
 
-        {/* Assignments Section */}
+        {/* Assignments Section - Only showing "assigned" status */}
         <Card
-          className="border-0"
+          className="border-0 mb-4"
           style={{
             borderRadius: styles.borderRadius,
             boxShadow: styles.cardShadow
@@ -266,7 +292,7 @@ const VolunteerDashboard = () => {
               <ClipboardCheck size={24} style={{ color: styles.primaryBlue }} />
               Assignments
             </h5>
-            {assignments.length === 0 ? (
+            {assignedTasks.length === 0 ? (
               <Alert
                 variant="info"
                 style={{
@@ -275,11 +301,11 @@ const VolunteerDashboard = () => {
                   boxShadow: styles.cardShadow
                 }}
               >
-                No assigned AFIs at the moment.
+                No assigned tasks at the moment.
               </Alert>
             ) : (
               <ListGroup variant="flush">
-                {assignments.map((assignment) => (
+                {assignedTasks.map((assignment) => (
                   <ListGroup.Item
                     key={assignment._id}
                     className="d-flex justify-content-between align-items-center"
@@ -303,17 +329,89 @@ const VolunteerDashboard = () => {
                       </small>
                     </div>
                     <div>
-                      <Badge
-                        pill
-                        bg={
-                          assignment.status === "Completed"
-                            ? "success"
-                            : assignment.status === "In Progress"
-                            ? "warning"
-                            : "secondary"
-                        }
-                        className="me-2"
+                      <Button
+                        variant="link"
+                        size="sm"
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(assignment.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: styles.primaryBlue,
+                          textDecoration: 'none',
+                          transition: styles.transition
+                        }}
                       >
+                        View on Map
+                      </Button>
+
+                      {/* Activate Button */}
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="ms-2"
+                        onClick={() => handleActivate(assignment._id)}
+                      >
+                        Activate
+                      </Button>
+                    </div>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            )}
+          </Card.Body>
+        </Card>
+
+        {/* Active Assignment Section - Only showing "In Progress" status */}
+        <Card
+          className="border-0"
+          style={{
+            borderRadius: styles.borderRadius,
+            boxShadow: styles.cardShadow
+          }}
+        >
+          <Card.Body>
+            <h5 className="mb-3 d-flex align-items-center gap-2">
+              <ClipboardCheck size={24} style={{ color: styles.primaryBlue }} />
+              Active Assignments
+            </h5>
+            {activeTasks.length === 0 ? (
+              <Alert
+                variant="info"
+                style={{
+                  borderRadius: styles.borderRadius,
+                  border: 'none',
+                  boxShadow: styles.cardShadow
+                }}
+              >
+                No active assignments at the moment.
+              </Alert>
+            ) : (
+              <ListGroup variant="flush">
+                {activeTasks.map((assignment) => (
+                  <ListGroup.Item
+                    key={assignment._id}
+                    className="d-flex justify-content-between align-items-center"
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '10px',
+                      marginBottom: '10px',
+                      backgroundColor: '#fff',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <div>
+                      <h6 className="mb-1 fw-bold">{assignment.name}</h6>
+                      <p className="mb-1"><strong>Location:</strong> {assignment.location}</p>
+                      <p className="mb-1"><strong>Contact:</strong> {assignment.phone}</p>
+                      <p className="mb-1 text-truncate" style={{ maxWidth: '300px' }}>
+                        <strong>Description:</strong> {assignment.description}
+                      </p>
+                      <small className="text-muted">
+                        <strong>Assigned Date:</strong> {new Date(assignment.assignedDate).toLocaleDateString()}
+                      </small>
+                    </div>
+                    <div>
+                      <Badge pill bg="warning" className="me-2">
                         {assignment.status}
                       </Badge>
                       <Button

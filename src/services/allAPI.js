@@ -41,13 +41,24 @@ export const assignVolunteerToRequestAPI = async (data) => {
     return await commonAPI("POST",`${serverURL}/assign-volunteer`, data, {
       headers: {
         "Content-Type": "application/json",
-        "Authorization": localStorage.getItem("token")
+        "Authorization": sessionStorage.getItem("token")
       }
     });
   };
 
 //get assigned afis
-export const getAssignedAFIsAPI = async (id)=>{
-    return await commonAPI("GET",`${serverURL}/assigned-afis/${id}`)
-}
+export const getAssignedAFIsAPI = async (id, status) => {
+    return await commonAPI("GET", `${serverURL}/assigned-afis/${id}?status=${status}`);
+};
+
+
+//update assignment status
+export const updateAssignmentStatusAPI = async (id, status) => {
+    return await commonAPI("PUT", `${serverURL}/assigned-afis/${id}`, { status }, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": sessionStorage.getItem("token")
+      }
+    });
+  };
 

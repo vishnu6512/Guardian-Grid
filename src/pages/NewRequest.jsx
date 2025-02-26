@@ -49,10 +49,11 @@ const NewRequest = () => {
 
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = `<url id="cuv1vkm8myaaw3owe4ai" type="url" status="failed" title="" wc="0">https://maps.googleapis.com/maps/api/js?key=</url> ${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initializeGoogleMaps`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initializeGoogleMaps`;
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
+
 
     window.initializeGoogleMaps = () => {
       initializeMapAndAutocomplete();
@@ -236,7 +237,7 @@ const NewRequest = () => {
                   {/* Form fields with styled inputs */}
                   <Row>
                     <Col md={6}>
-                      <Form.Group className="mb-4" controlId="name">
+                      <Form.Group className="mb-4" id="name">
                         <Form.Label className="text-muted">Full Name</Form.Label>
                         <div className="input-group">
                           <span className="input-group-text bg-light border-end-0">
@@ -255,7 +256,7 @@ const NewRequest = () => {
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      <Form.Group className="mb-4" controlId="phone">
+                      <Form.Group className="mb-4" id="phone">
                         <Form.Label className="text-muted">Phone Number</Form.Label>
                         <div className="input-group">
                           <span className="input-group-text bg-light border-end-0">
@@ -276,7 +277,7 @@ const NewRequest = () => {
                   </Row>
 
                   {/* Email Input */}
-                  <Form.Group className="mb-4" controlId="email">
+                  <Form.Group className="mb-4" id="email">
                     <Form.Label className="text-muted">Email Address</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-light border-end-0">
@@ -295,7 +296,7 @@ const NewRequest = () => {
                   </Form.Group>
 
                   {/* Location Input */}
-                  <Form.Group className="mb-4" controlId="location">
+                  <Form.Group className="mb-4" id="location">
                     <Form.Label className="text-muted">Location</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-light border-end-0">
@@ -328,7 +329,7 @@ const NewRequest = () => {
                   </div>
 
                   {/* Description */}
-                  <Form.Group className="mb-4" controlId="description">
+                  <Form.Group className="mb-4" id="description">
                     <Form.Label className="text-muted">Description of Emergency</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-light border-end-0">
