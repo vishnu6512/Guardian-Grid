@@ -36,7 +36,7 @@ export const rejectVolunteerAPI = async (reqBody)=>{
 export const getVolunteerStatusAPI = async (id,reqBody,reqHeader)=>{
     return await commonAPI("GET",`${serverURL}/status/${id}`,reqBody,reqHeader)
 }
-
+//assign volunteer to request
 export const assignVolunteerToRequestAPI = async (data) => {
     return await commonAPI("POST",`${serverURL}/assign-volunteer`, data, {
       headers: {
@@ -45,6 +45,11 @@ export const assignVolunteerToRequestAPI = async (data) => {
       }
     });
   };
+
+//decline afi request when admin clicks on decline button
+export const declineAfiRequestAPI = async (reqBody)=>{
+    return await commonAPI("POST",`${serverURL}/decline-afi`,reqBody)
+}
 
 //get assigned afis
 export const getAssignedAFIsAPI = async (id, status) => {
@@ -62,3 +67,7 @@ export const updateAssignmentStatusAPI = async (id, status) => {
     });
   };
 
+//fetch nearby volunteers using google distance matrix
+export const fetchNearbyVolunteersAPI = async (afiId) => {
+    return await commonAPI("GET", `${serverURL}/nearby-volunteers/${afiId}`);
+};

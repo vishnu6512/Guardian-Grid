@@ -177,33 +177,7 @@ const VolunteerDashboard = () => {
               <h2 className="mb-1 fw-bold">Volunteer Dashboard</h2>
               <p className="mb-0 opacity-75">Welcome back, Volunteer</p>
             </div>
-            <div className="d-flex gap-3">
-              <Button
-                variant="success"
-                className="d-flex align-items-center gap-2"
-                style={{
-                  backgroundColor: styles.primaryGreen || '#28a745',
-                  border: 'none',
-                  borderRadius: '10px',
-                  transition: styles.transition
-                }}
-              >
-                <User size={18} />
-                <span className="d-none d-md-inline">Active</span>
-              </Button>
-              <Button
-                variant="outline-primary"
-                className="d-flex align-items-center gap-2"
-                style={{
-                  border: 'none',
-                  borderRadius: '10px',
-                  transition: styles.transition
-                }}
-              >
-                <Bell size={18} />
-                <span className="d-none d-md-inline">Notifications</span>
-              </Button>
-            </div>
+
           </div>
         </div>
 
@@ -345,7 +319,7 @@ const VolunteerDashboard = () => {
                       <Button
                         variant="link"
                         size="sm"
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(assignment.location)}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(assignment.lat)},${encodeURIComponent(assignment.lng)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -426,7 +400,7 @@ const VolunteerDashboard = () => {
                       <Badge pill bg="warning" className="me-2">
                         {assignment.status}
                       </Badge>
-                      
+
                       <Button
                         variant="link"
                         size="sm"
