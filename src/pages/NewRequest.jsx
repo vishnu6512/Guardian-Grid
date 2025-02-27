@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Form, Button, Container, Alert, Row, Col, Card } from 'react-bootstrap';
-import { MapPin, AlertCircle, Phone, Mail } from 'lucide-react';
+import { Form, Button, Container, Alert, Row, Col, Card, Modal } from 'react-bootstrap';
+import { MapPin, AlertCircle, Phone, Mail, Check, Lock } from 'lucide-react';
 import Header from '../components/Header';
 import { registerAfiAPI } from '../services/allAPI';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import serverURL from '../services/serverURl';
 
 // Custom CSS styles
 const styles = {
@@ -35,6 +37,14 @@ const NewRequest = () => {
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  
+  // OTP related states
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
@@ -66,6 +76,15 @@ const NewRequest = () => {
       delete window.initializeGoogleMaps;
     };
   }, []);
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const initializeMapAndAutocomplete = () => {
     const defaultLocation = { lat: 10.8505, lng: 76.2711 }; // Kerala center
@@ -144,9 +163,76 @@ const NewRequest = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    
+    // Format phone number to E.164 format if not already
+    let formattedPhone = formData.phone;
+    if (!formattedPhone.startsWith('+')) {
+      // Add India country code as default if not present
+      // You may want to make this more sophisticated or use a library like libphonenumber-js
+      formattedPhone = '+91' + formattedPhone.replace(/^0+/, '');
+    }
+    
+    setIsSendingOtp(true);
+    setError(null);
+    
     try {
-      const result = await registerAfiAPI(formData);
+      // Send OTP request
+      const response = await axios.post(`${serverURL}/send-otp`, {
+        name: formData.name,
+        email: formData.email,
+        phone: formattedPhone,
+        location: formData.location
+      });
+      
+      // Show OTP modal
+      setShowOtpModal(true);
+      setCountdown(60); // 60 seconds countdown for resend
+      setSuccess("OTP sent to your phone. Please verify to complete your request.");
+    } catch (err) {
+      console.error('Error sending OTP:', err);
+      if (err.response && err.response.data && err.response.data.error) {
+        if (err.response.status === 429) {
+          setError(`${err.response.data.error}. Try again in ${err.response.data.retryAfter} seconds.`);
+          setCountdown(err.response.data.retryAfter || 60);
+        } else {
+          setError(err.response.data.error);
+        }
+      } else {
+        setError('Failed to send OTP. Please try again later.');
+      }
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const verifyOTP = async () => {
+    if (!otp || otp.length < 4) {
+      setOtpError('Please enter a valid OTP');
+      return;
+    }
+    
+    setIsVerifying(true);
+    setOtpError(null);
+    
+    try {
+      // Format phone number to E.164 format if not already
+      let formattedPhone = formData.phone;
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+91' + formattedPhone.replace(/^0+/, '');
+      }
+      
+      // Verify OTP
+      const response = await axios.post(`${serverURL}/verify-otp`, {
+        phone: formattedPhone,
+        otp: otp
+      });
+      
+      // If verification successful, submit the actual request
+      const result = await registerAfiAPI({
+        ...formData,
+        phone: formattedPhone
+      });
+      
       console.log('API Response:', result);
 
       if (result.status === 201) {
@@ -163,13 +249,68 @@ const NewRequest = () => {
           lng: '',
           description: '',
         });
+        setShowOtpModal(false);
       } else {
         console.log('Unexpected API structure:', result);
         alert('Unexpected error');
       }
     } catch (err) {
-      console.log('Error in API call:', err);
-      alert('Connection failed. Please try again later.');
+      console.error('Error verifying OTP:', err);
+      if (err.response && err.response.data && err.response.data.error) {
+        setOtpError(err.response.data.error);
+      } else {
+        setOtpError('Failed to verify OTP. Please try again.');
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const resendOTP = async () => {
+    if (countdown > 0) return;
+    
+    setIsSendingOtp(true);
+    setOtpError(null);
+    
+    try {
+      // Format phone number
+      let formattedPhone = formData.phone;
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+91' + formattedPhone.replace(/^0+/, '');
+      }
+      
+      // Resend OTP request
+      const response = await axios.post(`${serverURL}/send-otp`, {
+        name: formData.name,
+        email: formData.email,
+        phone: formattedPhone,
+        location: formData.location
+      });
+      
+      setCountdown(60); // Reset countdown
+      setSuccess("OTP resent to your phone.");
+    } catch (err) {
+      console.error('Error resending OTP:', err);
+      if (err.response && err.response.data && err.response.data.error) {
+        if (err.response.status === 429) {
+          setOtpError(`${err.response.data.error}. Try again in ${err.response.data.retryAfter} seconds.`);
+          setCountdown(err.response.data.retryAfter || 60);
+        } else {
+          setOtpError(err.response.data.error);
+        }
+      } else {
+        setOtpError('Failed to resend OTP. Please try again later.');
+      }
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  // Handle OTP input change
+  const handleOtpChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow digits
+    if (value.length <= 6) { // Assuming 6-digit OTP
+      setOtp(value);
     }
   };
 
@@ -285,7 +426,7 @@ const NewRequest = () => {
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="Enter your phone number"
+                            placeholder="Enter your phone number (e.g., +919876543210)"
                             required
                             className="border-start-0 ps-0"
                           />
@@ -385,12 +526,19 @@ const NewRequest = () => {
                       borderColor: styles.primaryBlue,
                       transition: styles.transition,
                     }}
+                    disabled={isSendingOtp}
                   >
-                    <AlertCircle
-                      size={18}
-                      style={{ color: 'white' }}
-                    />
-                    Submit Request
+                    {isSendingOtp ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Sending OTP...
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle size={18} style={{ color: 'white' }} />
+                        Submit Request
+                      </>
+                    )}
                   </Button>
                 </Form>
               </Card.Body>
@@ -398,6 +546,87 @@ const NewRequest = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* OTP Verification Modal */}
+      <Modal 
+        show={showOtpModal} 
+        onHide={() => setShowOtpModal(false)}
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton style={{ background: styles.headerGradient, color: 'white' }}>
+          <Modal.Title>Verify Your Phone Number</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="text-center mb-4">
+            <Lock size={40} style={{ color: styles.primaryBlue }} />
+            <h5 className="mt-3">Please enter the verification code</h5>
+            <p className="text-muted">
+              We've sent a 6-digit code to {formData.phone}. The code will expire in 5 minutes.
+            </p>
+          </div>
+
+          {otpError && (
+            <Alert variant="danger" style={{ borderRadius: styles.borderRadius }}>
+              {otpError}
+            </Alert>
+          )}
+
+          <Form.Group className="mb-4">
+            <Form.Control
+              type="text"
+              placeholder="Enter 6-digit OTP"
+              value={otp}
+              onChange={handleOtpChange}
+              className="form-control-lg text-center"
+              maxLength={6}
+              autoComplete="one-time-code"
+              required
+            />
+          </Form.Group>
+
+          <Button
+            variant="primary"
+            className="w-100 d-flex align-items-center justify-content-center gap-2 mb-3"
+            onClick={verifyOTP}
+            disabled={isVerifying}
+            style={{
+              backgroundColor: styles.primaryBlue,
+              borderColor: styles.primaryBlue,
+            }}
+          >
+            {isVerifying ? (
+              <>
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Verifying...
+              </>
+            ) : (
+              <>
+                <Check size={18} />
+                Verify OTP
+              </>
+            )}
+          </Button>
+
+          <div className="text-center">
+            <p className="mb-2">Didn't receive the code?</p>
+            <Button
+              variant="link"
+              onClick={resendOTP}
+              disabled={countdown > 0 || isSendingOtp}
+              className="p-0"
+            >
+              {countdown > 0 ? (
+                <span>Resend OTP in {countdown}s</span>
+              ) : isSendingOtp ? (
+                <span>Sending...</span>
+              ) : (
+                <span>Resend OTP</span>
+              )}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

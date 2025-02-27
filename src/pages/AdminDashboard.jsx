@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Alert,
-  Spinner,
-  Table,
-  Badge,
-  Modal,
-  Form,
-} from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Spinner, Table, Badge, Modal, Form, } from 'react-bootstrap';
 import { Users, Clock, Activity, FileCheck, UserCheck } from 'lucide-react';
 import Header from '../components/Header';
 import {
@@ -74,7 +62,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [dashboardData]);
 
   // Fetch nearby volunteers when a request is selected
   useEffect(() => {

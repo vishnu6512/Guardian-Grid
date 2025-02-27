@@ -28,6 +28,7 @@ const VolunteerDashboard = () => {
   const [completedTasks, setCompletedTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [volunteerName, setVolunteerName] = useState("");
 
   useEffect(() => {
     const fetchVolunteerData = async () => {
@@ -42,6 +43,7 @@ const VolunteerDashboard = () => {
       try {
         const statusResponse = await getVolunteerStatusAPI(userId);
         setStatus(statusResponse?.data?.status);
+        setVolunteerName(statusResponse?.data?.name); 
 
         if (statusResponse?.data?.status === "approved") {
           // Fetch assigned tasks
@@ -65,7 +67,7 @@ const VolunteerDashboard = () => {
     };
 
     fetchVolunteerData();
-  }, []);
+  }, [assignedTasks]);
 
   const handleActivate = async (id) => {
     try {
@@ -175,7 +177,7 @@ const VolunteerDashboard = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h2 className="mb-1 fw-bold">Volunteer Dashboard</h2>
-              <p className="mb-0 opacity-75">Welcome back, Volunteer</p>
+              <p className="mb-0 opacity-75">Welcome back, {volunteerName}</p>
             </div>
 
           </div>
@@ -183,7 +185,7 @@ const VolunteerDashboard = () => {
 
         {/* Summary Cards */}
         <Row className="g-4 mb-4">
-          <Col md={4}>
+          <Col md={6}>
             <Card
               className="border-0 h-100"
               style={{
@@ -210,7 +212,7 @@ const VolunteerDashboard = () => {
               </Card.Body>
             </Card>
           </Col>
-          <Col md={4}>
+          <Col md={6}>
             <Card
               className="border-0 h-100"
               style={{
@@ -237,33 +239,7 @@ const VolunteerDashboard = () => {
               </Card.Body>
             </Card>
           </Col>
-          <Col md={4}>
-            <Card
-              className="border-0 h-100"
-              style={{
-                borderRadius: styles.borderRadius,
-                boxShadow: styles.cardShadow,
-                transition: styles.transition
-              }}
-            >
-              <Card.Body className="d-flex align-items-center">
-                <div
-                  className="me-3 p-3 rounded-circle d-flex align-items-center justify-content-center"
-                  style={{
-                    backgroundColor: `${styles.primaryInfo}15`,
-                    width: '60px',
-                    height: '60px'
-                  }}
-                >
-                  <Calendar size={24} style={{ color: styles.primaryInfo }} />
-                </div>
-                <div>
-                  <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>Total Hours</p>
-                  <h3 className="mb-0 fw-bold">34 hrs</h3>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
+          
         </Row>
 
         {/* Assigned Tasks Section */}

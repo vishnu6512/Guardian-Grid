@@ -1,150 +1,354 @@
-import React from 'react';
-import { Container, Accordion, Alert, Card, Row, Col, ListGroup } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Container, Accordion, Alert, Card, Row, Col, ListGroup, Button, Spinner, Badge } from 'react-bootstrap';
 import Header from '../components/Header';
+import { getNearbyEmergencyServicesAPI } from '../services/allAPI';
+
+// Color palette
+const colors = {
+  mainBg: '#f8f9fa',
+  primaryBlue: '#0a4b91',
+  secondaryBlue: '#2d8bfd',
+  primaryRed: '#d63031',
+  secondaryRed: '#ff7675',
+};
 
 const FAQ = () => {
+  const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState([]);
+  const [error, setError] = useState(null);
+
   const emergencyContacts = [
-    { department: "Emergency Services", number: "911" },
-    { department: "Fire Department", number: "555-0123" },
-    { department: "Police Department", number: "555-0124" },
-    { department: "Medical Emergency", number: "555-0125" },
-    { department: "Disaster Management Cell", number: "555-0126" }
+    { department: "Emergency Services", number: "112", icon: "🆘️" },
+    { department: "Fire Department", number: "101", icon: "🚒" },
+    { department: "Police Department", number: "100", icon: "🚓" },
+    { department: "Medical Emergency", number: "108", icon: "🚑" },
+    { department: "Disaster Management Cell", number: "108", icon: "🌪️" }
   ];
+
+  const getNearbyServices = () => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser");
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+      
+      try {
+        // Call our backend API
+        const response = await getNearbyEmergencyServicesAPI(
+            latitude,
+            longitude,
+            'hospital|police|fire_station'
+          );
+        if (response.data.success) {
+          setServices(response.data.data);
+        } else {
+          setError("Failed to fetch nearby emergency services");
+        }
+      } catch (error) {
+        setError("Server error while fetching nearby emergency services");
+        console.error("Error fetching services:", error);
+      }
+      
+      setLoading(false);
+    }, (geolocationError) => {
+      setError("Unable to retrieve your location. Please enable location access and try again.");
+      setLoading(false);
+      console.error("Geolocation error:", geolocationError);
+    });
+  };
+
+  // Helper function to get icon for service type
+  const getServiceIcon = (type) => {
+    switch(type) {
+      case 'hospital': return '🏥';
+      case 'police': return '🚓';
+      case 'fire_station': return '🚒';
+      default: return '🔍';
+    }
+  };
+
+  // Format service type text
+  const formatServiceType = (type) => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  const openInGoogleMaps = (lat, lng, name) => {
+    const encodedName = encodeURIComponent(name || 'Location');
+    const url = `https://www.google.com/maps/search/${encodedName}/@${lat},${lng},17z`;
+    window.open(url, '_blank');
+  };
+  
+  
 
   return (
     <>
       <Header />
-      <Container className="py-5">
-        {/* Header Alert */}
-        <Alert variant="danger" className="mb-4 text-center shadow">
-          <Alert.Heading>🚨 Important Notice</Alert.Heading>
-          <p>
-            If you are in immediate danger, please call 911 immediately. This FAQ provides general guidance but should not replace professional emergency services.
-          </p>
-        </Alert>
+      <div style={{ backgroundColor: colors.mainBg, minHeight: "100vh", paddingBottom: "3rem" }}>
+        <Container className="py-5">
+          {/* Main Alert */}
+          <Alert 
+            variant="danger" 
+            className="mb-4 text-center" 
+            style={{ 
+              backgroundColor: colors.primaryRed, 
+              color: 'white', 
+              border: 'none',
+              borderRadius: '10px',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+            }}
+          >
+            <Alert.Heading style={{ fontSize: '1.8rem' }}>
+              <span className="me-2">🚨</span>
+              Emergency Assistance
+            </Alert.Heading>
+            <p className="mb-0" style={{ fontSize: '1.1rem' }}>
+              If you are in immediate danger, please call <strong>112</strong> immediately. 
+              This information is for guidance only and should not replace professional emergency services.
+            </p>
+          </Alert>
 
-        {/* Emergency Contacts Section */}
-        <Card className="mb-4 shadow">
-          <Card.Header as="h2" className="bg-danger text-white text-center">📞 Emergency Contact Numbers</Card.Header>
-          <Card.Body>
-            <ListGroup>
-              {emergencyContacts.map((contact, index) => (
-                <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center border-0 bg-light p-3">
-                  <strong>{contact.department}</strong>
-                  <span className="text-danger font-weight-bold">{contact.number}</span>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          </Card.Body>
-        </Card>
+          {/* Emergency Contacts Section */}
+          <Card 
+            className="mb-4" 
+            style={{ 
+              borderRadius: '10px', 
+              overflow: 'hidden',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+            }}
+          >
+            <Card.Header 
+              as="h2" 
+              className="text-white text-center py-3"
+              style={{ backgroundColor: colors.primaryBlue }}
+            >
+              📞 Emergency Contact Numbers
+            </Card.Header>
+            <Card.Body style={{ backgroundColor: 'white' }}>
+              <Row>
+                {emergencyContacts.map((contact, index) => (
+                  <Col md={6} lg={4} key={index}>
+                    <div 
+                      className="d-flex align-items-center my-2 p-3" 
+                      style={{ 
+                        backgroundColor: '#f8f9fa', 
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                        height: '100%'
+                      }}
+                      onMouseOver={(e) => {e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)'}}
+                      onMouseOut={(e) => {e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.04)'}}
+                    >
+                      <div 
+                        className="me-3" 
+                        style={{ 
+                          width: '48px', 
+                          height: '48px', 
+                          borderRadius: '50%', 
+                          backgroundColor: colors.secondaryBlue,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.5rem'
+                        }}
+                      >
+                        {contact.icon}
+                      </div>
+                      <div>
+                        <div className="fw-bold">{contact.department}</div>
+                        <div 
+                          className="fs-5" 
+                          style={{ 
+                            color: colors.primaryRed, 
+                            fontWeight: 'bold' 
+                          }}
+                        >
+                          {contact.number}
+                        </div>
+                      </div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            </Card.Body>
+          </Card>
 
-        {/* General Guidelines */}
-        <Card className="mb-4 shadow">
-          <Card.Header as="h2" className="bg-primary text-white text-center">📢 General Emergency Guidelines</Card.Header>
-          <Card.Body>
-            <Row>
-              <Col md={6}>
-                <h4 className="text-success">✅ DO's:</h4>
-                <ListGroup variant="flush">
-                  <ListGroup.Item>Stay calm and assess the situation</ListGroup.Item>
-                  <ListGroup.Item>Keep emergency numbers readily available</ListGroup.Item>
-                  <ListGroup.Item>Follow official instructions and evacuation orders</ListGroup.Item>
-                  <ListGroup.Item>Keep an emergency kit prepared</ListGroup.Item>
-                  <ListGroup.Item>Help others if you can do so safely</ListGroup.Item>
-                </ListGroup>
-              </Col>
-              <Col md={6}>
-                <h4 className="text-danger">❌ DON'Ts:</h4>
-                <ListGroup variant="flush">
-                  <ListGroup.Item>Don't panic or spread unverified information</ListGroup.Item>
-                  <ListGroup.Item>Don't ignore evacuation orders</ListGroup.Item>
-                  <ListGroup.Item>Don't use elevators during emergencies</ListGroup.Item>
-                  <ListGroup.Item>Don't return to dangerous areas until cleared</ListGroup.Item>
-                  <ListGroup.Item>Don't make unnecessary phone calls</ListGroup.Item>
-                </ListGroup>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-
-        {/* Disaster-Specific Guidelines */}
-        <Accordion className="mb-4 shadow">
-          <Accordion.Item eventKey="0">
-            <Accordion.Header>🌍 Earthquake Safety</Accordion.Header>
-            <Accordion.Body>
-              <ListGroup variant="flush">
-                <ListGroup.Item>Drop, Cover, and Hold On</ListGroup.Item>
-                <ListGroup.Item>Stay away from windows and exterior walls</ListGroup.Item>
-                <ListGroup.Item>If inside, stay inside. If outside, stay outside</ListGroup.Item>
-                <ListGroup.Item>After shaking stops, evacuate if necessary</ListGroup.Item>
-                <ListGroup.Item>Be prepared for aftershocks</ListGroup.Item>
-              </ListGroup>
-            </Accordion.Body>
-          </Accordion.Item>
-
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>🌊 Flood Safety</Accordion.Header>
-            <Accordion.Body>
-              <ListGroup variant="flush">
-                <ListGroup.Item>Move to higher ground immediately</ListGroup.Item>
-                <ListGroup.Item>Don't walk or drive through flood waters</ListGroup.Item>
-                <ListGroup.Item>Keep important documents in waterproof containers</ListGroup.Item>
-                <ListGroup.Item>Follow evacuation routes - avoid shortcuts</ListGroup.Item>
-                <ListGroup.Item>Turn off utilities if instructed to do so</ListGroup.Item>
-              </ListGroup>
-            </Accordion.Body>
-          </Accordion.Item>
-
-          <Accordion.Item eventKey="2">
-            <Accordion.Header>🔥 Fire Safety</Accordion.Header>
-            <Accordion.Body>
-              <ListGroup variant="flush">
-                <ListGroup.Item>Get out, stay out, and call for help</ListGroup.Item>
-                <ListGroup.Item>Crawl low under smoke</ListGroup.Item>
-                <ListGroup.Item>Test doors for heat before opening</ListGroup.Item>
-                <ListGroup.Item>Use stairs, not elevators</ListGroup.Item>
-                <ListGroup.Item>Have a designated meeting place outside</ListGroup.Item>
-              </ListGroup>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-
-        {/* Emergency Kit Section */}
-        <Card className="shadow">
-          <Card.Header as="h2" className="bg-success text-white text-center">🛑 Emergency Kit Essentials</Card.Header>
-          <Card.Body>
-            <Row>
-              <Col md={4}>
-                <h5>🔹 Basic Supplies</h5>
-                <ListGroup variant="flush">
-                  <ListGroup.Item>Water (1 gallon per person per day)</ListGroup.Item>
-                  <ListGroup.Item>Non-perishable food</ListGroup.Item>
-                  <ListGroup.Item>First aid kit</ListGroup.Item>
-                  <ListGroup.Item>Flashlight and batteries</ListGroup.Item>
-                </ListGroup>
-              </Col>
-              <Col md={4}>
-                <h5>📄 Important Documents</h5>
-                <ListGroup variant="flush">
-                  <ListGroup.Item>ID and important papers</ListGroup.Item>
-                  <ListGroup.Item>Insurance documents</ListGroup.Item>
-                  <ListGroup.Item>Emergency contact list</ListGroup.Item>
-                  <ListGroup.Item>Cash and change</ListGroup.Item>
-                </ListGroup>
-              </Col>
-              <Col md={4}>
-                <h5>🔧 Additional Items</h5>
-                <ListGroup variant="flush">
-                  <ListGroup.Item>Medications</ListGroup.Item>
-                  <ListGroup.Item>Multi-tool or basic tools</ListGroup.Item>
-                  <ListGroup.Item>Warm blankets</ListGroup.Item>
-                  <ListGroup.Item>Battery-powered radio</ListGroup.Item>
-                </ListGroup>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-      </Container>
+          {/* Nearby Emergency Services */}
+          <Card 
+            className="mb-4" 
+            style={{ 
+              borderRadius: '10px', 
+              overflow: 'hidden',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+            }}
+          >
+            <Card.Header 
+              as="h2" 
+              className="text-center py-3"
+              style={{ backgroundColor: colors.secondaryBlue, color: 'white' }}
+            >
+              📍 Nearby Emergency Services
+            </Card.Header>
+            <Card.Body className="text-center" style={{ backgroundColor: 'white' }}>
+              <Button 
+                onClick={getNearbyServices} 
+                disabled={loading}
+                style={{ 
+                  backgroundColor: colors.primaryBlue, 
+                  border: 'none',
+                  padding: '0.6rem 1.5rem',
+                  fontSize: '1.1rem',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              >
+                {loading ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" /> 
+                    Finding Services...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-map-marker-alt me-2"></i>
+                    Find Nearby Services
+                  </>
+                )}
+              </Button>
+              
+              {error && (
+                <Alert 
+                  variant="danger" 
+                  className="mt-4"
+                  style={{ backgroundColor: colors.secondaryRed, borderColor: colors.primaryRed }}
+                >
+                  <i className="fas fa-exclamation-circle me-2"></i>
+                  {error}
+                </Alert>
+              )}
+              
+              {services.length === 0 && !loading && !error && (
+                <div className="text-center mt-4 text-muted">
+                  <p>Click the button above to find emergency services near your current location.</p>
+                </div>
+              )}
+              
+              {services.length > 0 && (
+                <div className="mt-4">
+                  <div className="mb-3 text-start">
+                    <h5>{services.length} Emergency Services Found Near You</h5>
+                    <p className="text-muted small">Click on a card to view the location in Google Maps</p>
+                  </div>
+                  <Row>
+                    {services.map((service) => (
+                      <Col md={6} lg={4} className="mb-3" key={service.id}>
+                        <Card 
+                          style={{ 
+                            height: '100%', 
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => openInGoogleMaps(service.lat, service.lng, service.name)}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-5px)';
+                            e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                          }}
+                        >
+                          {service.photo && (
+                            <div 
+                              style={{ 
+                                height: '140px', 
+                                backgroundImage: `url(${service.photo})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                borderTopLeftRadius: '8px',
+                                borderTopRightRadius: '8px'
+                              }}
+                            />
+                          )}
+                          <Card.Body>
+                            <div 
+                              className="mb-2" 
+                              style={{ 
+                                backgroundColor: colors.secondaryBlue,
+                                color: 'white',
+                                display: 'inline-block',
+                                padding: '3px 10px',
+                                borderRadius: '20px',
+                                fontSize: '0.8rem'
+                              }}
+                            >
+                              {getServiceIcon(service.type)} {formatServiceType(service.type)}
+                            </div>
+                            <h5>{service.name}</h5>
+                            <p className="text-muted mb-2">{service.address}</p>
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <div className="d-flex">
+                                {service.rating && (
+                                  <div 
+                                    className="me-2" 
+                                    style={{ 
+                                      backgroundColor: '#f8f9fa',
+                                      padding: '3px 10px',
+                                      borderRadius: '20px',
+                                      fontSize: '0.8rem'
+                                    }}
+                                  >
+                                    ⭐ {service.rating}
+                                  </div>
+                                )}
+                                {service.open !== null && (
+                                  <div 
+                                    style={{ 
+                                      backgroundColor: service.open ? '#d4edda' : '#f8d7da',
+                                      color: service.open ? '#155724' : '#721c24',
+                                      padding: '3px 10px',
+                                      borderRadius: '20px',
+                                      fontSize: '0.8rem'
+                                    }}
+                                  >
+                                    {service.open ? '✓ Open Now' : '✗ Closed'}
+                                  </div>
+                                )}
+                              </div>
+                              <div 
+                                className="ms-2" 
+                                style={{ 
+                                  color: colors.primaryBlue,
+                                  fontSize: '0.85rem',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                              >
+                                <i className="fas fa-map-marker-alt me-1"></i>
+                                View Map
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Container>
+      </div>
     </>
   );
 };

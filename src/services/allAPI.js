@@ -71,3 +71,15 @@ export const updateAssignmentStatusAPI = async (id, status) => {
 export const fetchNearbyVolunteersAPI = async (afiId) => {
     return await commonAPI("GET", `${serverURL}/nearby-volunteers/${afiId}`);
 };
+
+
+
+
+
+export const getNearbyEmergencyServicesAPI = async (latitude, longitude, types) => {
+  return await commonAPI(
+    "GET", 
+    `${serverURL}/nearby-emergency-services/${latitude}/${longitude}/${types}`
+  );
+};
+
