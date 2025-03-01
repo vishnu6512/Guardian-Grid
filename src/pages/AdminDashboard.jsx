@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Table, Badge, Modal, Form, } from 'react-bootstrap';
 import { Users, Clock, Activity, FileCheck, UserCheck } from 'lucide-react';
 import Header from '../components/Header';
+import {jsPDF} from "jspdf";
+import autoTable from 'jspdf-autotable';
+
+
 import {
   fetchDashboardDataAPI,
   approveVolunteerAPI,
@@ -9,6 +13,7 @@ import {
   assignVolunteerToRequestAPI,
   fetchNearbyVolunteersAPI,
   declineAfiRequestAPI,
+
 } from '../services/allAPI';
 
 // Custom CSS
@@ -48,7 +53,6 @@ const AdminDashboard = () => {
   const [selectedDeclineRequest, setSelectedDeclineRequest] = useState(null);
   const [declineNote, setDeclineNote] = useState('');
 
-  // Fetch dashboard data on mount
   const fetchData = async () => {
     try {
       const response = await fetchDashboardDataAPI();
@@ -63,6 +67,12 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchData();
   }, [dashboardData]);
+  
+  // ✅ Logs the latest `dashboardData` whenever it updates
+  useEffect(() => {
+    console.log(dashboardData);
+  }, [dashboardData]);  // Runs when `dashboardData` changes
+  
 
   // Fetch nearby volunteers when a request is selected
   useEffect(() => {
@@ -172,7 +182,7 @@ const AdminDashboard = () => {
         setShowDeclineModal(false);
         setSelectedDeclineRequest(null);
         setDeclineNote('');
-        fetchData();
+        //fetchData();
       } else {
         alert('Failed to decline the request.');
       }
@@ -228,6 +238,110 @@ const AdminDashboard = () => {
     </Card>
   );
 
+  //generate pdf of afi collection
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Affected Individuals Report", pageWidth / 2, 15, { align: "center" });
+
+    // Subtitle with Timestamp
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 25);
+
+    // Enhanced Table Headers with additional fields
+    const headers = [
+      [
+        "#", 
+        "Name", 
+        "Phone", 
+        "Location",
+        "Description", 
+        "Status",
+        "ID",
+        "Assigned Date",
+      ]
+    ];
+
+    // Enhanced Table Data with additional fields
+    const data = dashboardData?.afiCollection?.map((item, index) => [
+        index + 1,
+        item.name || "N/A",
+        item.phone || "N/A",
+        item.location || "N/A",
+        item.description || "N/A",
+        item.status || "N/A",
+        item._id || "N/A",
+        item.assignedDate ? new Date(item.assignedDate).toLocaleString() : "N/A",
+        
+    ]) || [];
+
+    // Generate Table using the autoTable function directly
+    autoTable(doc, {
+        startY: 30, // Start position after title & subtitle
+        head: headers,
+        body: data,
+        theme: "grid", // Adds table borders
+        styles: { fontSize: 8, cellPadding: 2 }, // Reduced font size to fit more columns
+        headStyles: { fillColor: [44, 62, 80], textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [240, 240, 240] },
+        margin: { left: 5, right: 5 }, // Reduced margins to fit more columns
+        columnStyles: {
+          0: { cellWidth: 10 }, // # column
+          6: { cellWidth: 20 }, // Status column
+          7: { cellWidth: 45 }, // ID column - wider for the long ID
+          8: { cellWidth: 30 }, // Assigned Date column
+        }
+    });
+
+    // Add a section for declined requests if available
+    if (dashboardData?.afiCollection?.some(item => item.declineNote)) {
+      const yPos = doc.lastAutoTable.finalY + 10;
+      
+      // Declined Requests Section Header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Decline Notes", 10, yPos);
+      
+      // Decline Notes Table
+      const declineHeaders = [["#", "Name", "Decline Reason"]];
+      const declineData = dashboardData.afiCollection
+        .filter(item => item.declineNote)
+        .map((item, index) => [
+          index + 1,
+          item.name || "N/A",
+          item.declineNote || "N/A"
+        ]);
+      
+      if (declineData.length > 0) {
+        autoTable(doc, {
+          startY: yPos + 5,
+          head: declineHeaders,
+          body: declineData,
+          theme: "grid",
+          styles: { fontSize: 10, cellPadding: 3 },
+          headStyles: { fillColor: [192, 57, 43], textColor: 255, fontStyle: "bold" },
+          alternateRowStyles: { fillColor: [240, 240, 240] }
+        });
+      }
+    }
+
+    // Save PDF
+    doc.save("AFI_Collection_Report.pdf");
+  };
+
+
+
+
+  
+
+
+  
+
   return (
     <div className="min-vh-100" style={{ backgroundColor: styles.mainBg }}>
       <Header />
@@ -248,7 +362,12 @@ const AdminDashboard = () => {
               <h2 className="mb-1 fw-bold">Admin Dashboard</h2>
               <p className="mb-0 opacity-75">Welcome back, Admin</p>
             </div>
+            {!isLoading && !error && (
+              <Button  onClick={generatePDF} className="d-flex align-items-center gap-2 btn btn-success">
+            <i className="bi bi-file-earmark-pdf"></i> Export PDF
+        </Button>      )}
           </div>
+          
         </Container>
       </div>
 
@@ -310,6 +429,7 @@ const AdminDashboard = () => {
                     color={styles.secondaryRed}
                   />
                 </Col>
+                
               </Row>
 
               {/* Pending Approvals Card */}
@@ -736,6 +856,7 @@ const AdminDashboard = () => {
                               {request.description}
                             </td>
                             
+                            
                           </tr>
                         ))}
                       </tbody>
@@ -753,6 +874,8 @@ const AdminDashboard = () => {
                   )}
                 </Card.Body>
               </Card>
+
+              
             </>
           )
         )}

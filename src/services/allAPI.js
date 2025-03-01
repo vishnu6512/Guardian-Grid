@@ -37,8 +37,9 @@ export const getVolunteerStatusAPI = async (id,reqBody,reqHeader)=>{
     return await commonAPI("GET",`${serverURL}/status/${id}`,reqBody,reqHeader)
 }
 //assign volunteer to request
-export const assignVolunteerToRequestAPI = async (data) => {
-    return await commonAPI("POST",`${serverURL}/assign-volunteer`, data, {
+export const assignVolunteerToRequestAPI = async (reqBody) => {
+    
+    return await commonAPI("POST",`${serverURL}/assign-volunteer`, reqBody, {
       headers: {
         "Content-Type": "application/json",
         "Authorization": sessionStorage.getItem("token")
@@ -82,4 +83,8 @@ export const getNearbyEmergencyServicesAPI = async (latitude, longitude, types) 
     `${serverURL}/nearby-emergency-services/${latitude}/${longitude}/${types}`
   );
 };
+
+
+
+
 

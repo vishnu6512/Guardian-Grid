@@ -19,7 +19,7 @@ const Footer = () => {
             <h5 style={{ fontWeight: "bold", marginBottom: "15px" }}>Quick Links</h5>
             <Nav className="flex-column">
               <Nav.Link href="/" style={linkStyle}>Home</Nav.Link>
-              <Nav.Link href="/about" style={linkStyle}>About Us</Nav.Link>
+              <Nav.Link href="" style={linkStyle}>About Us</Nav.Link>
               <Nav.Link href="/volunteer" style={linkStyle}>Volunteer</Nav.Link>
               <Nav.Link href="/contact" style={linkStyle}>Contact</Nav.Link>
             </Nav>
@@ -29,10 +29,10 @@ const Footer = () => {
           <Col md={4}>
             <h5 style={{ fontWeight: "bold", marginBottom: "15px" }}>Contact Us</h5>
             <p style={{ marginBottom: "5px", fontSize: "0.95rem" }}>
-              📍 123 Relief Avenue, City, Country
+              📍 Kakkanad, Kochi, Kerala
             </p>
             <p style={{ marginBottom: "5px", fontSize: "0.95rem" }}>
-              📞 +1 (234) 567-890
+              📞 +91 1234567890
             </p>
             <p style={{ fontSize: "0.95rem" }}>
               ✉️ support@guardiangrid.org
