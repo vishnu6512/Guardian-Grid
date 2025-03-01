@@ -1,5 +1,5 @@
 import commonAPI from "./commonAPI"
-import serverURL from "./serverURl"
+import serverURL from "./serverURL"
 import axios from 'axios';
 
 //register volunteer when clicked on Join as volunteer button

@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import { registerAfiAPI } from '../services/allAPI';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import serverURL from '../services/serverURl';
+import serverURL from '../services/serverURL';
 
 // Custom CSS styles
 const styles = {
