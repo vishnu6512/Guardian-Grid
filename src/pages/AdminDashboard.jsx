@@ -675,6 +675,84 @@ const AdminDashboard = () => {
                   )}
                 </Card.Body>
               </Card>
+
+              {/* completed requests */}
+              <Card
+                className="border-0 mb-4"
+                style={{
+                  borderRadius: styles.borderRadius,
+                  boxShadow: styles.cardShadow,
+                  overflow: 'hidden',
+                }}
+              >
+                <Card.Header
+                  className="py-3"
+                  style={{
+                    background: 'white',
+                    borderBottom: `3px solid ${styles.primaryRed}`,
+                  }}
+                >
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0 fw-bold d-flex align-items-center">
+                      <Activity
+                        size={20}
+                        className="me-2"
+                        style={{ color: styles.primaryRed }}
+                      />
+                      Completed Requests
+                    </h5>
+                    <Badge
+                      pill
+                      bg="light"
+                      text="dark"
+                      className="d-flex align-items-center"
+                    >
+                      {dashboardData?.completedRequests?.length || 0} Requests
+                    </Badge>
+                  </div>
+                </Card.Header>
+                <Card.Body className="p-0">
+                  {dashboardData?.completedRequests?.length > 0 ? (
+                    <Table responsive hover className="mb-0">
+                      <thead style={{ backgroundColor: '#f8f9fa' }}>
+                        <tr>
+                          <th className="px-3 py-3">Name</th>
+                          <th className="px-3 py-3">Phone</th>
+                          <th className="px-3 py-3">Email</th>
+                          <th className="px-3 py-3">Location</th>
+                          <th className="px-3 py-3">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboardData.completedRequests.map((request) => (
+                          <tr key={request._id}>
+                            <td className="px-3 py-3">
+                              <strong>{request.name}</strong>
+                            </td>
+                            <td className="px-3 py-3">{request.phone}</td>
+                            <td className="px-3 py-3">{request.email}</td>
+                            <td className="px-3 py-3">{request.location}</td>
+                            <td className="px-3 py-3">
+                              {request.description}
+                            </td>
+                            
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-5">
+                      <Clock
+                        size={48}
+                        className="text-muted mb-3"
+                      />
+                      <p className="text-muted mb-0">
+                        No Completed Requests
+                      </p>
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
             </>
           )
         )}

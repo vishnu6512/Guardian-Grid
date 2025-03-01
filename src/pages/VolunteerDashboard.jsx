@@ -29,6 +29,7 @@ const VolunteerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [volunteerName, setVolunteerName] = useState("");
+  
 
   useEffect(() => {
     const fetchVolunteerData = async () => {
@@ -55,7 +56,7 @@ const VolunteerDashboard = () => {
           setActiveTasks(activeResponse?.data || []);
 
           // Fetch completed tasks
-          const completedResponse = await getAssignedAFIsAPI(userId, "Completed");
+          const completedResponse = await getAssignedAFIsAPI(userId, "completed");
           setCompletedTasks(completedResponse?.data || []);
         }
       } catch (err) {
@@ -85,11 +86,11 @@ const VolunteerDashboard = () => {
 
   const handleComplete = async (id) => {
     try {
-      await updateAssignmentStatusAPI(id, "Completed");
+      await updateAssignmentStatusAPI(id, "completed");
       setActiveTasks(prevTasks => prevTasks.filter(task => task._id !== id));
       const completedTask = activeTasks.find(task => task._id === id);
       if (completedTask) {
-        const updatedTask = { ...completedTask, status: "Completed" };
+        const updatedTask = { ...completedTask, status: "completed" };
         setCompletedTasks(prevTasks => [...prevTasks, updatedTask]);
       }
     } catch (error) {
@@ -284,7 +285,7 @@ const VolunteerDashboard = () => {
                       <h6 className="mb-1 fw-bold">{assignment.name}</h6>
                       <p className="mb-1"><strong>Location:</strong> {assignment.location}</p>
                       <p className="mb-1"><strong>Contact:</strong> {assignment.phone}</p>
-                      <p className="mb-1 text-truncate" style={{ maxWidth: '300px' }}>
+                      <p className="mb-1 " style={{ maxWidth: '500px' }}>
                         <strong>Description:</strong> {assignment.description}
                       </p>
                       <small className="text-muted">
@@ -365,7 +366,7 @@ const VolunteerDashboard = () => {
                       <h6 className="mb-1 fw-bold">{assignment.name}</h6>
                       <p className="mb-1"><strong>Location:</strong> {assignment.location}</p>
                       <p className="mb-1"><strong>Contact:</strong> {assignment.phone}</p>
-                      <p className="mb-1 text-truncate" style={{ maxWidth: '300px' }}>
+                      <p className="mb-1" style={{ maxWidth: '500px' }}>
                         <strong>Description:</strong> {assignment.description}
                       </p>
                       <small className="text-muted">
@@ -450,12 +451,10 @@ const VolunteerDashboard = () => {
                       <h6 className="mb-1 fw-bold">{assignment.name}</h6>
                       <p className="mb-1"><strong>Location:</strong> {assignment.location}</p>
                       <p className="mb-1"><strong>Contact:</strong> {assignment.phone}</p>
-                      <p className="mb-1 text-truncate" style={{ maxWidth: '300px' }}>
+                      <p className="mb-1 " style={{ maxWidth: '500px' }}>
                         <strong>Description:</strong> {assignment.description}
                       </p>
-                      <small className="text-muted">
-                        <strong>Completed Date:</strong> {new Date(assignment.completedDate).toLocaleDateString()}
-                      </small>
+                      
                     </div>
                     <div>
                       <Badge pill bg="success" className="me-2">
