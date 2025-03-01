@@ -19,9 +19,8 @@ const Footer = () => {
             <h5 style={{ fontWeight: "bold", marginBottom: "15px" }}>Quick Links</h5>
             <Nav className="flex-column">
               <Nav.Link href="/" style={linkStyle}>Home</Nav.Link>
-              <Nav.Link href="" style={linkStyle}>About Us</Nav.Link>
-              <Nav.Link href="/volunteer" style={linkStyle}>Volunteer</Nav.Link>
-              <Nav.Link href="/contact" style={linkStyle}>Contact</Nav.Link>
+              <Nav.Link href="/volunteer-registration" style={linkStyle}>Volunteer</Nav.Link>
+              <Nav.Link href="/faq" style={linkStyle}>Contact</Nav.Link>
             </Nav>
           </Col>
 
