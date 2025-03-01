@@ -123,6 +123,8 @@ const VolunteerDashboard = () => {
 
   if (status === 'declined') {
     return (
+      <>
+      <Header/>
       <div className="min-vh-100 d-flex justify-content-center align-items-center">
         <Alert
           variant="danger"
@@ -136,11 +138,15 @@ const VolunteerDashboard = () => {
           <p>Unfortunately, you are ineligible to help at this time.</p>
         </Alert>
       </div>
+      </>
+      
     );
   }
 
   if (status === 'pending') {
     return (
+      <>
+      <Header/>
       <div className="min-vh-100 d-flex justify-content-center align-items-center">
         <Alert
           variant="warning"
@@ -154,6 +160,8 @@ const VolunteerDashboard = () => {
           <p>Please wait while our team processes your request.</p>
         </Alert>
       </div>
+      </>
+      
     );
   }
 
