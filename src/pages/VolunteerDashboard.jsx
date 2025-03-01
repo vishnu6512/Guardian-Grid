@@ -170,6 +170,7 @@ const VolunteerDashboard = () => {
   }
 
   return (
+    <>
     <div className="min-vh-100" style={{ backgroundColor: styles.mainBg }}>
       <Header />
       <Container fluid className="px-4 py-4">
@@ -477,6 +478,8 @@ const VolunteerDashboard = () => {
         </Card>
       </Container>
     </div>
+    </>
+    
   );
 };
 
