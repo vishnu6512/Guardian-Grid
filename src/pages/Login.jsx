@@ -44,6 +44,7 @@ const Login = () => {
       if (result.status === 200) {
         sessionStorage.setItem("userId", result.data.user._id);
         sessionStorage.setItem('token', result.data.token);
+        sessionStorage.setItem('role', result.data.user.role); // Add this line to store the role
         
         const role = result.data.user.role;
 

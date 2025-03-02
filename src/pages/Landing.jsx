@@ -39,12 +39,7 @@ const Landing = () => {
       description: "Location-optimized relief deployment",
       color: styles.secondaryBlue
     },
-    {
-      icon: Bell,
-      title: "Real-Time Alerts",
-      description: "Immediate notifications and updates",
-      color: styles.secondaryRed
-    }
+    
   ];
 
   return (
